@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import AddTaskModal from '@/components/AddTaskModal.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import LogTimeModal from '@/components/LogTimeModal.vue'
-import ManageCategoriesModal from '@/components/ManageCategoriesModal.vue'
 import SearchBar from '@/components/SearchBar.vue'
-import StatsModal from '@/components/StatsModal.vue'
 import TaskItem from '@/components/TaskItem.vue'
 import UpdateTaskModal from '@/components/UpdateTaskModal.vue'
 import { HomeState } from '@/enums'
 import { categoryManager, type Category } from '@/schemas/category'
-import { deletedTaskManager, taskManager, type CreateTask, type Task } from '@/schemas/task'
+import { deletedTaskManager, taskManager, type Task } from '@/schemas/task'
 import { timeEntryManager, type CreateTimeEntry } from '@/schemas/timeEntry'
 import { computed, ref, type Ref } from 'vue'
 import BaseView from './BaseView.vue'
@@ -81,7 +78,6 @@ function taskClicked(id: number, isDeleted: boolean) {
   if (isDeleted) {
     switch (props.state) {
       case HomeState.Delete: {
-        // homeState.value = HomeState.Default
         selectedTask.value = deletedTaskManager.findBy('id', id)
         if (selectedTask.value !== undefined) {
           confirmRecoverModalRef.value!.showModal()
@@ -92,7 +88,6 @@ function taskClicked(id: number, isDeleted: boolean) {
   } else {
     switch (props.state) {
       case HomeState.Update: {
-        // homeState.value = HomeState.Default
         selectedTask.value = taskManager.findBy('id', id)
         if (selectedTask.value !== undefined) {
           updateModalRef.value!.showModal(selectedTask.value)
@@ -100,7 +95,6 @@ function taskClicked(id: number, isDeleted: boolean) {
         break
       }
       case HomeState.Delete: {
-        // homeState.value = HomeState.Default
         selectedTask.value = taskManager.findBy('id', id)
         if (selectedTask.value !== undefined) {
           confirmDeleteModalRef.value!.showModal()
@@ -111,17 +105,6 @@ function taskClicked(id: number, isDeleted: boolean) {
   }
 }
 
-const addTaskModalRef: Ref<InstanceType<typeof AddTaskModal> | null> = ref(null)
-
-function addTask(task: CreateTask) {
-  taskManager.add(task)
-  refreshTasks()
-}
-
-function addButton() {
-  addTaskModalRef.value!.showModal()
-}
-
 const confirmClearRecentlyDeleteModalRef: Ref<InstanceType<typeof ConfirmationModal> | null> =
   ref(null)
 function clearRecentlyDeletedTasks() {
@@ -129,25 +112,11 @@ function clearRecentlyDeletedTasks() {
   refreshTasks()
 }
 
-const manageCategoriesModalRef: Ref<InstanceType<typeof ManageCategoriesModal> | null> = ref(null)
-function updateCategory(category: Category) {
-  categoryManager.updateBy('id', category.id, category)
-  refreshTasks()
-}
-
-function deleteCategory(category: Category) {
-  categoryManager.removeBy('id', category.id)
-  refreshTasks()
-}
-
-const statsModalRef: Ref<InstanceType<typeof StatsModal> | null> = ref(null)
-
 interface Props {
   state: HomeState
 }
 
 const props = defineProps<Props>()
-// const homeState: Ref<HomeState> = ref(HomeState.Default)
 
 const baseViewTitle = computed(() => {
   switch (props.state) {
@@ -228,50 +197,37 @@ const baseViewTitle = computed(() => {
           </div>
         </div>
       </template>
-      <!-- <input type="radio" name="task_tabs" class="tab" aria-label="Tab 3" />
-      <div class="tab-content border-base-300 bg-base-100 p-10">Tab content 3</div> -->
     </div>
-
-    <!-- Statistics -->
-    <StatsModal ref="statsModalRef" />
-
-    <!-- Add a task -->
-    <AddTaskModal ref="addTaskModalRef" @add-task="addTask" />
-
-    <!-- Update a task -->
-    <UpdateTaskModal ref="updateModalRef" @updateTask="updateTask" />
-
-    <!-- Manage the categories -->
-    <ManageCategoriesModal
-      ref="manageCategoriesModalRef"
-      @updateCategory="updateCategory"
-      @delete-category="deleteCategory"
-    />
-
-    <!-- Confirming to clear all recently deleted tasks -->
-    <ConfirmationModal
-      ref="confirmClearRecentlyDeleteModalRef"
-      title="Clear Recently Deleted"
-      @confirm="clearRecentlyDeletedTasks"
-    >
-      Are you sure you want to clear the
-      <span class="font-bold">{{ deletedTasks.length }}</span> recently deleted
-      {{ deletedTasks.length == 1 ? 'task' : 'tasks' }}?
-    </ConfirmationModal>
-
-    <!-- Confirming to delete a task -->
-    <ConfirmationModal ref="confirmDeleteModalRef" title="Delete Task" @confirm="confirmDelete">
-      Are you sure you want to delete task?
-      <div class="pt-2 text-center font-bold">"{{ selectedTask?.title }}"</div>
-      <template #confirm> Delete </template>
-    </ConfirmationModal>
-
-    <!-- Confirming to recover a task -->
-    <ConfirmationModal ref="confirmRecoverModalRef" title="Recover Task" @confirm="confirmRecover">
-      Are you sure you want to recover task?
-      <div class="pt-2 text-center font-bold">"{{ selectedTask?.title }}"</div>
-      <template #confirm> Recover </template>
-    </ConfirmationModal>
-    <LogTimeModal ref="logTimeModalRef" @log-time="logTime" />
   </BaseView>
+
+  <!-- Update a task -->
+  <UpdateTaskModal ref="updateModalRef" @updateTask="updateTask" />
+
+  <!-- Confirming to clear all recently deleted tasks -->
+  <ConfirmationModal
+    ref="confirmClearRecentlyDeleteModalRef"
+    title="Clear Recently Deleted"
+    @confirm="clearRecentlyDeletedTasks"
+  >
+    Are you sure you want to clear the
+    <span class="font-bold">{{ deletedTasks.length }}</span> recently deleted
+    {{ deletedTasks.length == 1 ? 'task' : 'tasks' }}?
+  </ConfirmationModal>
+
+  <!-- Confirming to delete a task -->
+  <ConfirmationModal ref="confirmDeleteModalRef" title="Delete Task" @confirm="confirmDelete">
+    Are you sure you want to delete task?
+    <div class="pt-2 text-center font-bold">"{{ selectedTask?.title }}"</div>
+    <template #confirm> Delete </template>
+  </ConfirmationModal>
+
+  <!-- Confirming to recover a task -->
+  <ConfirmationModal ref="confirmRecoverModalRef" title="Recover Task" @confirm="confirmRecover">
+    Are you sure you want to recover task?
+    <div class="pt-2 text-center font-bold">"{{ selectedTask?.title }}"</div>
+    <template #confirm> Recover </template>
+  </ConfirmationModal>
+
+  <!-- Log Time for a Task -->
+  <LogTimeModal ref="logTimeModalRef" @log-time="logTime" />
 </template>
