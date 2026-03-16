@@ -139,7 +139,7 @@ const baseViewTitle = computed(() => {
     <div class="tabs tabs-lift">
       <input type="radio" name="task_tabs" class="tab" aria-label="Active" checked />
       <div class="tab-content border-base-300 bg-base-100 p-3">
-        <div class="flex flex-col gap-2">
+        <div v-if="activeTasks.length > 0" class="flex flex-col gap-2">
           <TaskItem
             v-for="task in activeTasks"
             :key="task.id"
@@ -151,11 +151,16 @@ const baseViewTitle = computed(() => {
             @logTimeClicked="openLogTime"
           />
         </div>
+        <div v-else class="py-2">
+          There are no active tasks, click
+          <RouterLink to="/create" class="link link-primary">here</RouterLink>
+          to create a task.
+        </div>
       </div>
 
       <input type="radio" name="task_tabs" class="tab" aria-label="Completed" />
       <div class="tab-content border-base-300 bg-base-100 p-3">
-        <div class="flex flex-col gap-2">
+        <div v-if="completedTasks.length > 0" class="flex flex-col gap-2">
           <TaskItem
             v-for="task in completedTasks"
             :key="task.id"
@@ -166,6 +171,26 @@ const baseViewTitle = computed(() => {
             @clicked="taskClicked"
           />
         </div>
+        <div v-else-if="activeTasks.length > 0" class="py-2">
+          <!-- There are tasks, but none are marked as completed -->
+          No tasks are marked as completed. Click on the checkbox
+          <div class="whitespace-nowrap inline-block">
+            (
+            <input
+              class="checkbox m-0 pointer-events-none checkbox-sm checkbox-ghost"
+              type="checkbox"
+            />
+            )
+          </div>
+          next to an active task in order to mark it as complete.
+        </div>
+        <div v-else class="py-2">
+          <!-- There are no tasks to be marked, so the only thing
+           a user should do is create one instead -->
+          There are no active tasks to be completed, click
+          <RouterLink to="/create" class="link link-primary">here</RouterLink>
+          to create a task.
+        </div>
       </div>
 
       <template v-if="props.state === HomeState.Delete">
@@ -175,7 +200,7 @@ const baseViewTitle = computed(() => {
             <!-- TODO: mt-3 may not be correct here... -->
             <div class="text-xl" :class="{ 'mt-2 pr-5': deletedTasks.length > 0 }">
               Recently Deleted {{ deletedTasks.length }}
-              {{ deletedTasks.length === 1 ? 'Task' : 'Task' }}
+              {{ deletedTasks.length === 1 ? 'Task' : 'Tasks' }}
             </div>
             <button
               v-if="deletedTasks.length > 0"
@@ -185,7 +210,7 @@ const baseViewTitle = computed(() => {
               Clear
             </button>
           </div>
-          <div class="flex flex-col gap-2">
+          <div v-if="deletedTasks.length > 0" class="flex flex-col gap-2">
             <TaskItem
               v-for="task in filteredDeletedTasks"
               :key="task.id"
@@ -194,6 +219,10 @@ const baseViewTitle = computed(() => {
               :is-deleted="true"
               @clicked="taskClicked"
             />
+          </div>
+          <div v-else class="py-2">
+            There are no deleted tasks, when they are deleted you can recover them here if you
+            choose to.
           </div>
         </div>
       </template>

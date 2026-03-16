@@ -105,7 +105,12 @@ const canConfirm = computed(() => name.value.trim().length > 0)
         </div>
       </div>
     </div>
-    <div v-else>No custom categories</div>
+    <div v-else>
+      There are no custom categories, you can add one when either
+      <RouterLink to="/create" class="link link-primary">creating a task</RouterLink>
+      or
+      <RouterLink to="/edit" class="link link-primary">editing a task</RouterLink>.
+    </div>
 
     <ConfirmationModal
       ref="updateModalRef"

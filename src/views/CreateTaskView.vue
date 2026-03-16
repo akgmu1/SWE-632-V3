@@ -12,7 +12,7 @@ import {
   META_ADD_NEW_CATEGORY,
   type Category,
 } from '@/schemas/category'
-import { taskManager, type CreateTask } from '@/schemas/task'
+import { taskManager } from '@/schemas/task'
 import { computed, ref, type Ref } from 'vue'
 import z from 'zod'
 import BaseView from './BaseView.vue'
@@ -139,6 +139,14 @@ function onConfirm() {
 
   router.push('/')
 }
+
+function onCancel() {
+  if (history.state?.back) {
+    router.back()
+  } else {
+    router.push('/')
+  }
+}
 </script>
 
 <template>
@@ -208,7 +216,7 @@ function onConfirm() {
       </label>
     </div>
     <div class="flex justify-center">
-      <button class="btn btn-outline" @click="">Cancel</button>
+      <button class="btn btn-outline" @click="onCancel">Cancel</button>
       <div class="px-4"></div>
       <button class="btn btn-success" @click="onConfirm">
         <slot name="confirm"> Create </slot>
