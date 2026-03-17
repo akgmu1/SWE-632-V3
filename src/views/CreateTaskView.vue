@@ -12,7 +12,7 @@ import {
   META_ADD_NEW_CATEGORY,
   type Category,
 } from '@/schemas/category'
-import { taskManager } from '@/schemas/task'
+import { taskManager, type Task } from '@/schemas/task'
 import { computed, ref, type Ref } from 'vue'
 import z from 'zod'
 import BaseView from './BaseView.vue'
@@ -122,7 +122,7 @@ function onConfirm() {
     completed: false,
     dueDate: dueDate.value,
     category: finalCategory,
-    created: dateTrim(new Date()),
+    created: new Date(),
   })
 
   saveRememberedOptions()
@@ -147,6 +147,11 @@ function onCancel() {
     router.push('/')
   }
 }
+
+const taskList = ref(taskManager.all())
+const sortedTaskList: Ref<Task[]> = computed(() => {
+  return taskList.value.sort((a, b) => b.created.getTime() - a.created.getTime())
+})
 </script>
 
 <template>
@@ -221,6 +226,13 @@ function onCancel() {
       <button class="btn btn-success" @click="onConfirm">
         <slot name="confirm"> Create </slot>
       </button>
+    </div>
+
+    <!-- Working on still -->
+    <div class="border border-base-300 bg-base-100 rounded-box p-6 mt-5">
+      <div v-for="task in sortedTaskList" :key="task.id">
+        {{ task.title }} Created {{ dateToYYYYMMDD(task.created) }}
+      </div>
     </div>
   </BaseView>
 </template>
