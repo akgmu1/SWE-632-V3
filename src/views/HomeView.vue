@@ -5,7 +5,7 @@ import SearchBar from '@/components/SearchBar.vue'
 import TaskItem from '@/components/TaskItem.vue'
 import UpdateTaskModal from '@/components/UpdateTaskModal.vue'
 import { HomeState } from '@/enums'
-import { sortTasks, SortOption } from '@/helper'
+import { SortOption, sortTasks } from '@/helper'
 import { categoryManager, type Category } from '@/schemas/category'
 import { deletedTaskManager, taskManager, type Task } from '@/schemas/task'
 import { timeEntryManager, type CreateTimeEntry } from '@/schemas/timeEntry'
@@ -42,9 +42,7 @@ const activeTasks = computed(() =>
 
 const completedTasks = computed(() =>
   sortTasks(
-    tasks.value.filter(
-      (t) => t.completed && (!q.value || t.title.toLowerCase().includes(q.value)),
-    ),
+    tasks.value.filter((t) => t.completed && (!q.value || t.title.toLowerCase().includes(q.value))),
     sortOption.value,
   ),
 )
@@ -148,35 +146,26 @@ const baseViewTitle = computed(() => {
 
 <template>
   <BaseView :title="baseViewTitle">
+    <div class="mb-4 flex justify-center"><SearchBar v-model="search" /></div>
 
-<div class="mb-4 flex justify-center"> <SearchBar v-model="search" /> </div>
-
-
- 
-
-    <div
-      v-if="props.state === HomeState.Default && tasks.length > 0"
-      class="alert alert-info mb-4"
-    >
+    <div v-if="props.state === HomeState.Default && tasks.length > 0" class="alert alert-info mb-4">
       <span>
         To view statistics, first go to
-        <RouterLink to="/edit" class="font-semibold underline text-primary">
-          Edit
-        </RouterLink>
+        <RouterLink to="/edit" class="font-semibold underline text-primary"> Edit </RouterLink>
         and log time for a task.
       </span>
     </div>
-<div class="mb-4 flex justify-end">
-  <label class="flex items-center gap-2">
-    <span class="text-sm font-medium">Sort by:</span>
-    <select v-model="sortOption" class="select select-bordered select-sm w-auto">
-      <option :value="SortOption.Name">Name (alphabetical)</option>
-      <option :value="SortOption.Created">Created Date</option>
-      <option :value="SortOption.Due">Due Date</option>
-    </select>
-  </label>
-</div>
-      
+    <div class="mb-4 flex justify-end">
+      <label class="flex items-center gap-2">
+        <span class="text-sm font-medium">Sort by:</span>
+        <select v-model="sortOption" class="select select-bordered select-sm w-auto">
+          <option :value="SortOption.Name">Name (alphabetical)</option>
+          <option :value="SortOption.Created">Created Date</option>
+          <option :value="SortOption.Due">Due Date</option>
+        </select>
+      </label>
+    </div>
+
     <div class="tabs tabs-lift">
       <input type="radio" name="task_tabs" class="tab" aria-label="Active" checked />
       <div class="tab-content border-base-300 bg-base-100 p-3">

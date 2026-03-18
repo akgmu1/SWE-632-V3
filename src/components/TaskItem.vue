@@ -146,9 +146,7 @@ const subtaskProgress = computed(() => {
             {{ totalHoursLabel }} worked
           </span>
 
-          <span v-else-if="homeStateUpdate" class="badge badge-warning">
-            No time logged yet
-          </span>
+          <span v-else-if="homeStateUpdate" class="badge badge-warning"> No time logged yet </span>
 
           <button
             v-if="homeStateUpdate"
