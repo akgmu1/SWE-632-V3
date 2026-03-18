@@ -37,33 +37,33 @@ const IS_DEV = import.meta.env.DEV
             </RouterLink>
           </li>
           <li>
+            <RouterLink to="/create" active-class="bg-primary text-primary-content">
+              <PlusIcon class="size-5" />
+              Create Task
+            </RouterLink>
+          </li>
+          <li>
             <RouterLink to="/edit" active-class="bg-primary text-primary-content">
               <PencilSquareIcon class="size-5" />
-              Edit
+              Edit Task
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink to="/delete" active-class="bg-primary text-primary-content">
+              <TrashIcon class="size-5" />
+              Delete Task
             </RouterLink>
           </li>
           <li>
             <RouterLink to="/categories" active-class="bg-primary text-primary-content">
               <ArchiveBoxIcon class="size-5" />
-              Categories
+              Manage Categories
             </RouterLink>
           </li>
           <li>
             <RouterLink to="/stats" active-class="bg-primary text-primary-content">
               <PresentationChartLineIcon class="size-5" />
               Statistics
-            </RouterLink>
-          </li>
-          <li>
-            <RouterLink to="/create" active-class="bg-primary text-primary-content">
-              <PlusIcon class="size-5" />
-              Create
-            </RouterLink>
-          </li>
-          <li>
-            <RouterLink to="/delete" active-class="bg-primary text-primary-content">
-              <TrashIcon class="size-5" />
-              Delete
             </RouterLink>
           </li>
           <li v-if="IS_DEV">
