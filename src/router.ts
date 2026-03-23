@@ -7,6 +7,9 @@ const ROUTES: RouteRecordRaw[] = [
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),
+    meta: {
+      title: 'Not Found',
+    },
   },
   {
     path: '/',
@@ -23,6 +26,9 @@ const ROUTES: RouteRecordRaw[] = [
     props: () => ({
       state: HomeState.Update,
     }),
+    meta: {
+      title: 'Edit',
+    },
   },
   {
     path: '/delete',
@@ -31,11 +37,17 @@ const ROUTES: RouteRecordRaw[] = [
     props: () => ({
       state: HomeState.Delete,
     }),
+    meta: {
+      title: 'Delete',
+    },
   },
   {
     path: '/create',
     name: 'Create Task',
     component: () => import('@/views/CreateTaskView.vue'),
+    meta: {
+      title: 'Create',
+    },
   },
   {
     path: '/stats',
@@ -60,6 +72,11 @@ if (IS_DEV) {
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: ROUTES,
+})
+
+const WEBSITE_NAME = 'Task Manager'
+router.afterEach((to) => {
+  document.title = to.meta.title ? `${to.meta.title} — ${WEBSITE_NAME}` : WEBSITE_NAME
 })
 
 export default router

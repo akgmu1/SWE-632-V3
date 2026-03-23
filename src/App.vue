@@ -26,7 +26,10 @@ const IS_DEV = import.meta.env.DEV
       <label for="my-drawer-1" aria-label="close sidebar" class="drawer-overlay"></label>
       <div class="bg-base-300 min-h-full">
         <RouterLink to="/">
-          <div class="text-2xl font-semibold text-center pt-2">Task Manager</div>
+          <div class="flex pt-2 justify-center items-center gap-2">
+            <img src="/logo.png" class="size-9 rounded" />
+            <div class="text-2xl font-semibold">Task Manager</div>
+          </div>
         </RouterLink>
         <ul class="menu w-64 p-4 gap-1">
           <!-- Sidebar content here -->
