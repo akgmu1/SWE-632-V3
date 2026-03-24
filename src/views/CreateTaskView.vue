@@ -314,18 +314,20 @@ function confirmInsert() {
 
           <div class="flex flex-col gap-2">
             <div class="truncate">Task: {{ task.title }}</div>
-            <div class="badge badge-outline">
+            <div class="badge badge-outline badge-sm md:badge-md h-auto">
               {{ categoryManager.findBy('id', task.category)?.name }}
             </div>
           </div>
         </div>
 
         <!-- Right Side -->
-        <div class="flex gap-2">
-          <div class="badge" :class="dueBadgeClass(dueDateLabel(task))">
+        <div class="flex gap-2 flex-col lg:flex-row">
+          <div class="badge badge-sm md:badge-md h-auto" :class="dueBadgeClass(dueDateLabel(task))">
             <b>Due:</b> {{ task.dueDate.toDateString() }}
           </div>
-          <div class="badge badge-ghost">{{ createdDateLabel(task) }}</div>
+          <div class="badge badge-ghost badge-sm md:badge-md h-auto">
+            {{ createdDateLabel(task) }}
+          </div>
         </div>
       </div>
     </div>
