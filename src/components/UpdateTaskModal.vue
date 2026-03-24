@@ -9,7 +9,7 @@ import {
 } from '@/schemas/category'
 import { subtaskManager, type Subtask } from '@/schemas/subtask'
 import type { Task } from '@/schemas/task'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import CategoryColor from './CategoryColor.vue'
 import ConfirmationModal from './ConfirmationModal.vue'
@@ -54,24 +54,54 @@ const task: Ref<Task | undefined> = ref(undefined)
 const subtasks: Ref<Subtask[]> = ref([])
 const tempSubtasks = ref<string[]>([])
 
-const dueDate = ref(new Date())
-
 const categories: Ref<Category[]> = ref(categoryManager.all())
-const selectedCategory = ref<number>(0)
-const newCategoryName = ref('')
-const newCategoryColor = ref(randomColor())
+const existingCategory: Ref<number | undefined> = ref()
+
+const form = createFormState(
+  {
+    title: () => task.value?.title ?? '',
+    selectedCategory: () => task.value?.category ?? DEFAULT_CATEGORY,
+    newCategoryName: '',
+    newCategoryColor: randomColor(),
+    dueDate: () => task.value?.dueDate ?? new Date(),
+  },
+  {
+    title: (x) => (x.trim().length > 0 ? '' : 'Title cannot be empty'),
+    newCategoryName: (x, form) => {
+      // No errors when not adding one
+      existingCategory.value = undefined
+      if (form.selectedCategory !== META_ADD_NEW_CATEGORY) {
+        return ''
+      }
+
+      const name = x.trim()
+      if (name.length === 0) {
+        return 'Category name cannot be empty'
+      }
+
+      for (const c of categories.value) {
+        if (c.name === name) {
+          existingCategory.value = c.id
+          return 'Category name already taken, please pick another name or select that category'
+        }
+      }
+
+      return ''
+    },
+  },
+)
 
 const currentCategory = computed(() => {
-  return categoryManager.findBy('id', selectedCategory.value)!
+  return categoryManager.findBy('id', form.values.selectedCategory)!
 })
 
-const isAddingNewCategory = computed(() => selectedCategory.value === META_ADD_NEW_CATEGORY)
+const isAddingNewCategory = computed(() => form.values.selectedCategory === META_ADD_NEW_CATEGORY)
 
 function onCategoryChange(val: number) {
-  selectedCategory.value = val
+  form.values.selectedCategory = val
   if (val !== META_ADD_NEW_CATEGORY) {
-    newCategoryName.value = ''
-    newCategoryColor.value = randomColor()
+    form.values.newCategoryName = ''
+    form.values.newCategoryColor = randomColor()
   }
 }
 
@@ -121,16 +151,12 @@ defineExpose({
   showModal: (t: Task) => {
     categories.value = categoryManager.all()
     task.value = t
-    selectedCategory.value = t.category
+
     subtasks.value = subtaskManager.filterBy('taskId', t.id)
     tempSubtasks.value = []
-    dueDate.value = t.dueDate
-    title.value = t.title.trim()
-    checkTitle()
-    newCategoryName.value = ''
-    newCategoryColor.value = randomColor()
 
     subtaskForm.reset()
+    form.reset()
 
     modalRef.value!.showModal()
   },
@@ -139,54 +165,42 @@ defineExpose({
   },
 })
 
-const title: Ref<string> = ref('')
-const titleErrorStr: Ref<string> = ref('')
-const hadError = computed(() => titleErrorStr.value)
-
-async function checkTitle() {
-  titleErrorStr.value = ''
-
-  const trimmed = title.value.trim()
-  if (trimmed.length === 0) {
-    titleErrorStr.value = 'Title can not be empty'
-    return
-  }
-}
-
-onMounted(() => {
-  checkTitle()
-})
-
 const canConfirm = computed(() => {
-  if (hadError.value) return false
-  if (!title.value.trim()) return false
-  if (isAddingNewCategory.value) {
-    return newCategoryName.value.trim().length > 0
-  }
+  if (subtaskForm.state.hasErrors) return false
+  if (form.state.hasErrors) return false
   return true
 })
 
-function onConfirm(): void {
+async function onConfirm() {
+  form.touchAll()
+  await nextTick()
+
+  if (form.state.hasErrors) {
+    await nextTick()
+    ;(document.querySelector('.input-error')! as HTMLInputElement).focus()
+    return
+  }
+
   if (!canConfirm.value || !task.value) return
 
   let finalCategory: number = DEFAULT_CATEGORY
 
   if (isAddingNewCategory.value) {
-    const newName = newCategoryName.value.trim()
+    const newName = form.values.newCategoryName.trim()
     finalCategory = categoryManager.add({
       name: newName,
-      color: newCategoryColor.value,
+      color: form.values.newCategoryColor,
     })
-    selectedCategory.value = finalCategory
+    form.values.selectedCategory = finalCategory
   } else {
-    finalCategory = selectedCategory.value
+    finalCategory = form.values.selectedCategory
   }
 
   const updatedTask: Task = {
     ...task.value,
-    title: title.value.trim(),
+    title: form.values.title.trim(),
     category: finalCategory,
-    dueDate: dateTrim(dueDate.value),
+    dueDate: dateTrim(form.values.dueDate),
   }
 
   emits('updateTask', updatedTask, true)
@@ -204,9 +218,9 @@ function onConfirm(): void {
   subtasks.value = subtaskManager.filterBy('taskId', updatedTask.id)
   tempSubtasks.value = []
 
+  task.value = undefined
   subtaskForm.reset()
-  newCategoryName.value = ''
-  newCategoryColor.value = randomColor()
+  form.reset()
 }
 </script>
 
@@ -220,36 +234,52 @@ function onConfirm(): void {
   >
     <div class="container mx-auto pt-4 text-center">
       <div class="flex flex-col gap-4 sm:flex-row">
-        <label class="w-full input">
-          <span class="label">Title</span>
-          <div class="flex justify-center">
-            <input
-              :class="{ 'input-error': titleErrorStr }"
-              :placeholder="task?.title"
-              @input="checkTitle"
-              v-model="title"
-            />
-          </div>
-        </label>
+        <div class="flex flex-col w-full">
+          <label
+            class="w-full input"
+            :class="{
+              'input-error': form.touched.title && form.errors.title,
+            }"
+          >
+            <span class="label">Title</span>
+            <div class="flex justify-center">
+              <input
+                v-model="form.values.title"
+                @blur="form.touch('title')"
+                type="text"
+                placeholder="Title"
+                class="w-full"
+                @keyup.enter="onConfirm"
+              />
+            </div>
+          </label>
+
+          <label v-if="form.errors.title && form.touched.title" class="label">
+            <div class="label-text-alt text-error text-wrap">
+              {{ form.errors.title }}
+            </div>
+          </label>
+        </div>
 
         <input
           type="date"
-          :value="dateToYYYYMMDD(dueDate)"
+          :value="dateToYYYYMMDD(form.values.dueDate)"
           @input="
-            dueDate = dateTrim(($event.target as HTMLInputElement).valueAsDate ?? new Date(), true)
+            form.values.dueDate = dateTrim(
+              ($event.target as HTMLInputElement).valueAsDate ?? new Date(),
+              true,
+            )
           "
           class="input-bordered input w-full"
         />
       </div>
-
-      <div :hidden="!titleErrorStr" class="text-error">Error: {{ titleErrorStr }}</div>
 
       <div class="mx-auto mt-6 flex items-center gap-3">
         <CategoryColor :category="currentCategory" />
 
         <select
           class="select-bordered select w-full"
-          :value="selectedCategory"
+          :value="form.values.selectedCategory"
           @change="onCategoryChange(Number(($event.target as HTMLSelectElement).value))"
         >
           <option value="" disabled>Selected Category (optional)</option>
@@ -265,22 +295,49 @@ function onConfirm(): void {
             type="button"
             @click="
               () => {
-                newCategoryColor = randomColor()
+                form.values.newCategoryColor = randomColor()
               }
             "
             class="cursor-pointer"
           >
-            <CategoryColor :color="newCategoryColor" />
+            <CategoryColor :color="form.values.newCategoryColor" />
           </button>
         </ToolTip>
+        <div class="flex flex-col w-full">
+          <input
+            v-model="form.values.newCategoryName"
+            @blur="form.touch('newCategoryName')"
+            type="text"
+            placeholder="New category name"
+            class="input-bordered input w-full"
+            :class="{
+              'input-error': form.touched.newCategoryName && form.errors.newCategoryName,
+            }"
+            @keyup.enter="onConfirm"
+          />
 
-        <input
-          v-model="newCategoryName"
-          type="text"
-          placeholder="New category name"
-          class="input-bordered input w-full"
-          @keyup.enter="onConfirm"
-        />
+          <label v-if="form.errors.newCategoryName && form.touched.newCategoryName" class="label">
+            <div class="label-text-alt text-error text-wrap text-left">
+              {{ form.errors.newCategoryName }}
+            </div>
+
+            <template v-if="existingCategory !== undefined">
+              <button
+                class="btn btn-secondary btn-sm"
+                @click="
+                  () => {
+                    form.values.selectedCategory = existingCategory!
+                    form.values.newCategoryName = ''
+                    form.errors.newCategoryName = ''
+                    existingCategory = undefined
+                  }
+                "
+              >
+                Click to select that category
+              </button>
+            </template>
+          </label>
+        </div>
       </div>
 
       <div class="mt-6 text-left">
@@ -344,6 +401,12 @@ function onConfirm(): void {
             </div>
           </label>
         </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center mt-5">
+      <div v-if="form.state.hasErrors" class="alert alert-error min-w-max">
+        <span>Please fix the errors above</span>
       </div>
     </div>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { triggerAddClass } from '@/helper'
 import { ref, type Ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 
@@ -19,6 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const modalRef: Ref<InstanceType<typeof BaseModal> | null> = ref(null)
+const confirmButtonRef: Ref<HTMLElement | null> = ref(null)
 
 defineExpose({
   showModal: () => {
@@ -34,6 +36,8 @@ function onClick(confirm: boolean) {
     emits('confirm')
     if (props.shouldClose) {
       modalRef.value!.close()
+    } else {
+      triggerAddClass(confirmButtonRef.value!, 'animate-shake')
     }
   } else {
     modalRef.value!.close()
@@ -51,6 +55,7 @@ function onClick(confirm: boolean) {
       <div class="px-4"></div>
       <button
         class="btn"
+        ref="confirmButtonRef"
         :class="{ 'btn-success': props.positive, 'btn-error': !props.positive }"
         @click="onClick(true)"
       >
