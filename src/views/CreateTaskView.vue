@@ -100,6 +100,7 @@ onBeforeUnmount(() => {
 })
 
 const tempSubtasks: Ref<string[]> = ref([])
+const subtaskTextRef: Ref<HTMLInputElement | null> = ref(null)
 
 async function addTempSubtask() {
   subtaskForm.touchAll()
@@ -108,7 +109,7 @@ async function addTempSubtask() {
   if (subtaskForm.state.hasErrors) {
     triggerAddClass(addSubtaskRef.value!, 'animate-shake')
     await nextTick()
-    ;(document.querySelector('.input-error')! as HTMLInputElement).focus()
+    subtaskTextRef.value!.focus()
     return
   }
 
@@ -407,6 +408,7 @@ function confirmInsert() {
         <div class="flex flex-col">
           <div class="mt-3 flex gap-2">
             <input
+              ref="subtaskTextRef"
               v-model="subtaskForm.values.newSubtaskText"
               class="input-bordered input w-full"
               placeholder="Add a subtask..."

@@ -106,6 +106,7 @@ function onCategoryChange(val: number) {
 }
 
 const addSubtaskRef: Ref<HTMLElement | null> = ref(null)
+const subtaskTextRef: Ref<HTMLInputElement | null> = ref(null)
 async function addSubtask() {
   subtaskForm.touchAll()
   await nextTick()
@@ -113,7 +114,7 @@ async function addSubtask() {
   if (subtaskForm.state.hasErrors) {
     triggerAddClass(addSubtaskRef.value!, 'animate-shake')
     await nextTick()
-    ;(document.querySelector('.input-error')! as HTMLInputElement).focus()
+    subtaskTextRef.value!.focus()
     return
   }
 
@@ -379,6 +380,7 @@ async function onConfirm() {
         <div class="flex flex-col mt-5">
           <div class="flex gap-2">
             <input
+              ref="subtaskTextRef"
               v-model="subtaskForm.values.newSubtaskText"
               class="input-bordered input w-full"
               placeholder="Add a subtask..."
